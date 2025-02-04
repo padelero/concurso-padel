@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -19,9 +19,6 @@ const Auth = () => {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
       });
 
       if (signUpError) throw signUpError;
@@ -47,6 +44,8 @@ const Auth = () => {
         errorMessage = "Este email ya está registrado";
       } else if (error.message.includes("Invalid email")) {
         errorMessage = "Email inválido";
+      } else if (error.message.includes("anonymous_provider_disabled")) {
+        errorMessage = "El registro por email no está habilitado. Por favor, contacta al administrador.";
       }
 
       toast({
@@ -54,6 +53,7 @@ const Auth = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      console.error("Error detallado:", error);
     } finally {
       setLoading(false);
     }
@@ -77,6 +77,8 @@ const Auth = () => {
       // Mensajes de error específicos
       if (error.message.includes("Invalid login credentials")) {
         errorMessage = "Email o contraseña incorrectos";
+      } else if (error.message.includes("anonymous_provider_disabled")) {
+        errorMessage = "El inicio de sesión por email no está habilitado. Por favor, contacta al administrador.";
       }
 
       toast({
@@ -84,6 +86,7 @@ const Auth = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      console.error("Error detallado:", error);
     } finally {
       setLoading(false);
     }
