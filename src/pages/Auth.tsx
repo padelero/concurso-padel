@@ -16,24 +16,28 @@ const Auth = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const { error: signUpError } = await supabase.auth.signUp({
+      
+      // 1. Crear el usuario en auth.users
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (signUpError) throw signUpError;
 
-      // Crear entrada en la tabla padelero
-      const { error: padeleroError } = await supabase
-        .from("padelero")
-        .insert([{ email }]);
+      if (authData.user) {
+        // 2. Crear entrada en la tabla padelero
+        const { error: padeleroError } = await supabase
+          .from("padelero")
+          .insert([{ email }]);
 
-      if (padeleroError) throw padeleroError;
+        if (padeleroError) throw padeleroError;
 
-      toast({
-        title: "Registro exitoso",
-        description: "Por favor, verifica tu email para continuar.",
-      });
+        toast({
+          title: "Registro exitoso",
+          description: "Por favor, verifica tu email para continuar.",
+        });
+      }
     } catch (error: any) {
       let errorMessage = "Error en el registro";
       
@@ -44,8 +48,6 @@ const Auth = () => {
         errorMessage = "Este email ya está registrado";
       } else if (error.message.includes("Invalid email")) {
         errorMessage = "Email inválido";
-      } else if (error.message.includes("anonymous_provider_disabled")) {
-        errorMessage = "El registro por email no está habilitado. Por favor, contacta al administrador.";
       }
 
       toast({
@@ -77,8 +79,6 @@ const Auth = () => {
       // Mensajes de error específicos
       if (error.message.includes("Invalid login credentials")) {
         errorMessage = "Email o contraseña incorrectos";
-      } else if (error.message.includes("anonymous_provider_disabled")) {
-        errorMessage = "El inicio de sesión por email no está habilitado. Por favor, contacta al administrador.";
       }
 
       toast({
