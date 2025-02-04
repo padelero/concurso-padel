@@ -19,6 +19,11 @@ const Auth = () => {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            email: email,
+          },
+        },
       });
 
       if (signUpError) throw signUpError;
