@@ -16,6 +16,9 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState("");
   const [movil, setMovil] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,7 +35,6 @@ const Profile = () => {
         return;
       }
 
-      // Use maybeSingle() instead of single() to handle the case when no profile exists
       const { data, error } = await supabase
         .from("padelero")
         .select("*")
@@ -44,7 +46,6 @@ const Profile = () => {
         throw error;
       }
 
-      // If no profile exists, create one
       if (!data) {
         const { data: newProfile, error: insertError } = await supabase
           .from("padelero")
@@ -100,7 +101,6 @@ const Profile = () => {
         throw error;
       }
 
-      // Actualizar el estado local después de una actualización exitosa
       setProfile(prev => prev ? { ...prev, nombre, movil } : null);
 
       toast({
@@ -116,6 +116,54 @@ const Profile = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updatePassword = async () => {
+    try {
+      setChangingPassword(true);
+      
+      if (newPassword.length < 6) {
+        toast({
+          title: "Error",
+          description: "La contraseña debe tener al menos 6 caracteres",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        toast({
+          title: "Error",
+          description: "Las contraseñas no coinciden",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Éxito",
+        description: "Contraseña actualizada correctamente",
+      });
+
+      // Clear password fields
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      toast({
+        title: "Error",
+        description: "Error al actualizar la contraseña",
+        variant: "destructive",
+      });
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -166,6 +214,44 @@ const Profile = () => {
               placeholder="Tu número de móvil"
             />
           </div>
+
+          {/* Sección de cambio de contraseña */}
+          <div className="pt-4 border-t">
+            <h3 className="text-lg font-medium mb-4">Cambiar Contraseña</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nueva Contraseña
+                </label>
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Nueva contraseña"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirmar Contraseña
+                </label>
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirmar nueva contraseña"
+                />
+              </div>
+              <Button
+                onClick={updatePassword}
+                disabled={changingPassword}
+                variant="outline"
+                className="w-full"
+              >
+                {changingPassword ? "Actualizando..." : "Cambiar Contraseña"}
+              </Button>
+            </div>
+          </div>
+
           <div className="flex flex-col space-y-4">
             <Button
               onClick={updateProfile}
