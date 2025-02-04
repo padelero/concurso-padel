@@ -16,22 +16,32 @@ const Auth = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      console.log("Attempting signup with:", { email }); // Debug log
       
-      // 1. Crear el usuario en auth.users
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        console.error("Signup error:", signUpError); // Debug log
+        throw signUpError;
+      }
 
-      if (authData.user) {
-        // 2. Crear entrada en la tabla padelero
+      if (data?.user) {
+        console.log("User created successfully:", data.user); // Debug log
+        
         const { error: padeleroError } = await supabase
           .from("padelero")
           .insert([{ email }]);
 
-        if (padeleroError) throw padeleroError;
+        if (padeleroError) {
+          console.error("Padelero insert error:", padeleroError); // Debug log
+          throw padeleroError;
+        }
 
         toast({
           title: "Registro exitoso",
@@ -39,9 +49,9 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
+      console.error("Full error object:", error); // Debug log
       let errorMessage = "Error en el registro";
       
-      // Mensajes de error específicos
       if (error.message.includes("Password should be at least 6 characters")) {
         errorMessage = "La contraseña debe tener al menos 6 caracteres";
       } else if (error.message.includes("User already registered")) {
@@ -55,7 +65,6 @@ const Auth = () => {
         description: errorMessage,
         variant: "destructive",
       });
-      console.error("Error detallado:", error);
     } finally {
       setLoading(false);
     }
@@ -65,18 +74,23 @@ const Auth = () => {
     e.preventDefault();
     try {
       setLoading(true);
+      console.log("Attempting signin with:", { email }); // Debug log
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Signin error:", error); // Debug log
+        throw error;
+      }
 
       navigate("/profile");
     } catch (error: any) {
+      console.error("Full signin error:", error); // Debug log
       let errorMessage = "Error al iniciar sesión";
       
-      // Mensajes de error específicos
       if (error.message.includes("Invalid login credentials")) {
         errorMessage = "Email o contraseña incorrectos";
       }
@@ -86,7 +100,6 @@ const Auth = () => {
         description: errorMessage,
         variant: "destructive",
       });
-      console.error("Error detallado:", error);
     } finally {
       setLoading(false);
     }
