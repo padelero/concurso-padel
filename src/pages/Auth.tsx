@@ -19,6 +19,9 @@ const Auth = () => {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
       });
 
       if (signUpError) throw signUpError;
@@ -35,9 +38,20 @@ const Auth = () => {
         description: "Por favor, verifica tu email para continuar.",
       });
     } catch (error: any) {
+      let errorMessage = "Error en el registro";
+      
+      // Mensajes de error específicos
+      if (error.message.includes("Password should be at least 6 characters")) {
+        errorMessage = "La contraseña debe tener al menos 6 caracteres";
+      } else if (error.message.includes("User already registered")) {
+        errorMessage = "Este email ya está registrado";
+      } else if (error.message.includes("Invalid email")) {
+        errorMessage = "Email inválido";
+      }
+
       toast({
-        title: "Error en el registro",
-        description: error.message,
+        title: "Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -58,9 +72,16 @@ const Auth = () => {
 
       navigate("/profile");
     } catch (error: any) {
+      let errorMessage = "Error al iniciar sesión";
+      
+      // Mensajes de error específicos
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Email o contraseña incorrectos";
+      }
+
       toast({
-        title: "Error al iniciar sesión",
-        description: error.message,
+        title: "Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
