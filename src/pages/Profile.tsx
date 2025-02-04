@@ -32,20 +32,39 @@ const Profile = () => {
         return;
       }
 
+      // Use maybeSingle() instead of single() to handle the case when no profile exists
       const { data, error } = await supabase
         .from("padelero")
         .select("*")
         .eq("email", user.email)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error);
         throw error;
       }
 
-      setProfile(data);
-      setNombre(data.nombre || "");
-      setMovil(data.movil || "");
+      // If no profile exists, create one
+      if (!data) {
+        const { data: newProfile, error: insertError } = await supabase
+          .from("padelero")
+          .insert([{ email: user.email }])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          throw insertError;
+        }
+
+        setProfile(newProfile);
+        setNombre(newProfile.nombre || "");
+        setMovil(newProfile.movil || "");
+      } else {
+        setProfile(data);
+        setNombre(data.nombre || "");
+        setMovil(data.movil || "");
+      }
     } catch (error: any) {
       console.error("Full error object:", error);
       toast({
