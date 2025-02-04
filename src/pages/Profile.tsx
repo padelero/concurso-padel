@@ -38,12 +38,16 @@ const Profile = () => {
         .eq("email", user.email)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
 
       setProfile(data);
       setNombre(data.nombre || "");
       setMovil(data.movil || "");
     } catch (error: any) {
+      console.error("Full error object:", error);
       toast({
         title: "Error",
         description: "Error al cargar el perfil",
@@ -72,13 +76,20 @@ const Profile = () => {
         })
         .eq("email", user.email);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating profile:", error);
+        throw error;
+      }
+
+      // Actualizar el estado local después de una actualización exitosa
+      setProfile(prev => prev ? { ...prev, nombre, movil } : null);
 
       toast({
         title: "Éxito",
         description: "Perfil actualizado correctamente",
       });
     } catch (error: any) {
+      console.error("Full error object:", error);
       toast({
         title: "Error",
         description: "Error al actualizar el perfil",
