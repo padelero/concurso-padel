@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
+  id: string;
   email: string;
   nombre: string | null;
   movil: string | null;
@@ -30,7 +32,7 @@ export const ProfileDataTab = () => {
       const { data, error } = await supabase
         .from("padelero")
         .select("*")
-        .eq("email", user.email)
+        .eq("id", user.id)
         .maybeSingle();
 
       if (error) {
@@ -41,7 +43,12 @@ export const ProfileDataTab = () => {
       if (!data) {
         const { data: newProfile, error: insertError } = await supabase
           .from("padelero")
-          .insert([{ email: user.email }])
+          .insert([{ 
+            id: user.id,
+            email: user.email,
+            nombre: "",
+            movil: ""
+          }])
           .select()
           .single();
 
@@ -82,7 +89,7 @@ export const ProfileDataTab = () => {
           nombre,
           movil,
         })
-        .eq("email", user.email);
+        .eq("id", user.id);
 
       if (error) throw error;
 
@@ -93,6 +100,7 @@ export const ProfileDataTab = () => {
         description: "Perfil actualizado correctamente",
       });
     } catch (error: any) {
+      console.error("Error updating profile:", error);
       toast({
         title: "Error",
         description: "Error al actualizar el perfil",
