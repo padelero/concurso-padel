@@ -37,8 +37,10 @@ export type Database = {
           fecha_limite_pronostico: string
           fecha_partido: string
           id: string
-          pareja1: string
-          pareja2: string
+          jugador1d: string
+          jugador1i: string
+          jugador2d: string
+          jugador2i: string
           resultado: Database["public"]["Enums"]["resultado_tipo"] | null
         }
         Insert: {
@@ -47,8 +49,10 @@ export type Database = {
           fecha_limite_pronostico: string
           fecha_partido: string
           id?: string
-          pareja1: string
-          pareja2: string
+          jugador1d: string
+          jugador1i: string
+          jugador2d: string
+          jugador2i: string
           resultado?: Database["public"]["Enums"]["resultado_tipo"] | null
         }
         Update: {
@@ -57,8 +61,10 @@ export type Database = {
           fecha_limite_pronostico?: string
           fecha_partido?: string
           id?: string
-          pareja1?: string
-          pareja2?: string
+          jugador1d?: string
+          jugador1i?: string
+          jugador2d?: string
+          jugador2i?: string
           resultado?: Database["public"]["Enums"]["resultado_tipo"] | null
         }
         Relationships: []
