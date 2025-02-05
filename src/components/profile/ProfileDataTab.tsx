@@ -4,12 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface Profile {
   id: string;
   email: string;
   nombre: string | null;
   movil: string | null;
+  is_admin?: boolean;
 }
 
 export const ProfileDataTab = () => {
@@ -29,18 +31,31 @@ export const ProfileDataTab = () => {
       
       if (!user) return;
 
-      const { data, error } = await supabase
+      // Get the user's profile data
+      const { data: profileData, error: profileError } = await supabase
         .from("padelero")
         .select("*")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        throw error;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
       }
 
-      if (!data) {
+      // Get the user's role
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (roleError) {
+        console.error("Error fetching role:", roleError);
+        throw roleError;
+      }
+
+      if (!profileData) {
         const { data: newProfile, error: insertError } = await supabase
           .from("padelero")
           .insert([{ 
@@ -57,13 +72,19 @@ export const ProfileDataTab = () => {
           throw insertError;
         }
 
-        setProfile(newProfile);
+        setProfile({
+          ...newProfile,
+          is_admin: roleData?.role === 'admin'
+        });
         setNombre(newProfile.nombre || "");
         setMovil(newProfile.movil || "");
       } else {
-        setProfile(data);
-        setNombre(data.nombre || "");
-        setMovil(data.movil || "");
+        setProfile({
+          ...profileData,
+          is_admin: roleData?.role === 'admin'
+        });
+        setNombre(profileData.nombre || "");
+        setMovil(profileData.movil || "");
       }
     } catch (error: any) {
       toast({
@@ -117,17 +138,22 @@ export const ProfileDataTab = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-700">
           Email
         </label>
-        <Input
-          type="email"
-          value={profile?.email || ""}
-          disabled
-          className="bg-gray-100"
-        />
+        {profile?.is_admin && (
+          <Badge variant="secondary" className="ml-2">
+            Administrador
+          </Badge>
+        )}
       </div>
+      <Input
+        type="email"
+        value={profile?.email || ""}
+        disabled
+        className="bg-gray-100"
+      />
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Nombre

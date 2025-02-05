@@ -98,6 +98,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       ranking: {
@@ -111,10 +132,16 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       resultado_tipo: "2/0" | "2/1" | "1/2" | "0/2"
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
