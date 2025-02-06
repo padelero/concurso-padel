@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type FormData = {
   jugador1d: string;
@@ -20,11 +27,25 @@ type FormData = {
   jugador2i: string;
   fecha_partido: string;
   fecha_limite_pronostico: string;
+  evento_id: string;
+};
+
+type Jugador = {
+  id: string;
+  nombre: string;
+  posicion: string;
+};
+
+type Evento = {
+  id: string;
+  nombre: string;
 };
 
 export const PartidosTab = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [jugadores, setJugadores] = useState<Jugador[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -34,8 +55,41 @@ export const PartidosTab = () => {
       jugador2i: "",
       fecha_partido: "",
       fecha_limite_pronostico: "",
+      evento_id: "",
     },
   });
+
+  useEffect(() => {
+    const fetchJugadores = async () => {
+      const { data, error } = await supabase
+        .from("jugadores")
+        .select("id, nombre, posicion")
+        .eq("activo", true);
+
+      if (error) {
+        console.error("Error fetching jugadores:", error);
+        return;
+      }
+
+      setJugadores(data || []);
+    };
+
+    const fetchEventos = async () => {
+      const { data, error } = await supabase
+        .from("eventos")
+        .select("id, nombre");
+
+      if (error) {
+        console.error("Error fetching eventos:", error);
+        return;
+      }
+
+      setEventos(data || []);
+    };
+
+    fetchJugadores();
+    fetchEventos();
+  }, []);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -67,10 +121,39 @@ export const PartidosTab = () => {
     }
   };
 
+  const jugadoresPorPosicion = (posicion: string) => {
+    return jugadores.filter(j => j.posicion === posicion);
+  };
+
   return (
     <div className="space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="evento_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Evento</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona el evento" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {eventos.map((evento) => (
+                      <SelectItem key={evento.id} value={evento.id}>
+                        {evento.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-4">
               <h3 className="font-semibold">Pareja 1</h3>
@@ -80,9 +163,20 @@ export const PartidosTab = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Jugador Derecha</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre del jugador" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el jugador" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {jugadoresPorPosicion("derecha").map((jugador) => (
+                          <SelectItem key={jugador.id} value={jugador.id}>
+                            {jugador.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -93,9 +187,20 @@ export const PartidosTab = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Jugador Izquierda</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre del jugador" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el jugador" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {jugadoresPorPosicion("reves").map((jugador) => (
+                          <SelectItem key={jugador.id} value={jugador.id}>
+                            {jugador.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -110,9 +215,20 @@ export const PartidosTab = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Jugador Derecha</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre del jugador" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el jugador" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {jugadoresPorPosicion("derecha").map((jugador) => (
+                          <SelectItem key={jugador.id} value={jugador.id}>
+                            {jugador.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -123,9 +239,20 @@ export const PartidosTab = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Jugador Izquierda</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nombre del jugador" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el jugador" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {jugadoresPorPosicion("reves").map((jugador) => (
+                          <SelectItem key={jugador.id} value={jugador.id}>
+                            {jugador.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
