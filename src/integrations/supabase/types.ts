@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      eventos: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          descripcion: string | null
+          fecha_fin: string
+          fecha_inicio: string
+          id: string
+          nombre: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          descripcion?: string | null
+          fecha_fin: string
+          fecha_inicio: string
+          id?: string
+          nombre: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          descripcion?: string | null
+          fecha_fin?: string
+          fecha_inicio?: string
+          id?: string
+          nombre?: string
+        }
+        Relationships: []
+      }
+      jugadores: {
+        Row: {
+          activo: boolean | null
+          created_at: string | null
+          created_by: string | null
+          genero: string
+          id: string
+          nombre: string
+          patrocinador: string | null
+          posicion: string
+        }
+        Insert: {
+          activo?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          genero: string
+          id?: string
+          nombre: string
+          patrocinador?: string | null
+          posicion: string
+        }
+        Update: {
+          activo?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          genero?: string
+          id?: string
+          nombre?: string
+          patrocinador?: string | null
+          posicion?: string
+        }
+        Relationships: []
+      }
       padelero: {
         Row: {
           email: string
@@ -34,6 +97,7 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          evento_id: string | null
           fecha_limite_pronostico: string
           fecha_partido: string
           id: string
@@ -46,6 +110,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          evento_id?: string | null
           fecha_limite_pronostico: string
           fecha_partido: string
           id?: string
@@ -58,6 +123,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          evento_id?: string | null
           fecha_limite_pronostico?: string
           fecha_partido?: string
           id?: string
@@ -67,7 +133,43 @@ export type Database = {
           jugador2i?: string
           resultado?: Database["public"]["Enums"]["resultado_tipo"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "partidos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partidos_jugador1d_fkey"
+            columns: ["jugador1d"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partidos_jugador1i_fkey"
+            columns: ["jugador1i"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partidos_jugador2d_fkey"
+            columns: ["jugador2d"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partidos_jugador2i_fkey"
+            columns: ["jugador2i"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pronosticos: {
         Row: {
