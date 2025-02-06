@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartidosTab } from "./PartidosTab";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type FormData = {
   nombre: string;
@@ -23,9 +31,19 @@ type FormData = {
   descripcion: string;
 };
 
+type Evento = {
+  id: string;
+  nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  descripcion: string | null;
+};
+
 export const EventosTab = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -36,40 +54,85 @@ export const EventosTab = () => {
     },
   });
 
+  const fetchEventos = async () => {
+    const { data, error } = await supabase
+      .from("eventos")
+      .select("*")
+      .order("fecha_inicio", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching eventos:", error);
+      return;
+    }
+
+    setEventos(data || []);
+  };
+
+  useEffect(() => {
+    fetchEventos();
+  }, []);
+
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
-      const { error } = await supabase.from("eventos").insert({
-        ...data,
-        created_by: user?.id,
-      });
+      if (selectedEvento) {
+        const { error } = await supabase
+          .from("eventos")
+          .update(data)
+          .eq("id", selectedEvento.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Evento creado",
-        description: "El evento se ha creado correctamente",
-      });
+        toast({
+          title: "Evento actualizado",
+          description: "El evento se ha actualizado correctamente",
+        });
+      } else {
+        const { error } = await supabase.from("eventos").insert({
+          ...data,
+          created_by: user?.id,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Evento creado",
+          description: "El evento se ha creado correctamente",
+        });
+      }
 
       form.reset();
+      setSelectedEvento(null);
+      fetchEventos();
     } catch (error) {
-      console.error("Error creating event:", error);
+      console.error("Error with evento:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo crear el evento. Por favor, inténtalo de nuevo.",
+        description: "No se pudo procesar el evento. Por favor, inténtalo de nuevo.",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleEdit = (evento: Evento) => {
+    setSelectedEvento(evento);
+    form.reset({
+      nombre: evento.nombre,
+      fecha_inicio: new Date(evento.fecha_inicio).toISOString().slice(0, 16),
+      fecha_fin: new Date(evento.fecha_fin).toISOString().slice(0, 16),
+      descripcion: evento.descripcion || "",
+    });
+  };
+
   return (
     <Tabs defaultValue="crear" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="crear">Crear Evento</TabsTrigger>
+        <TabsTrigger value="crear">Crear/Editar Evento</TabsTrigger>
+        <TabsTrigger value="lista">Lista de Eventos</TabsTrigger>
         <TabsTrigger value="partidos">Partidos</TabsTrigger>
       </TabsList>
       
@@ -139,10 +202,57 @@ export const EventosTab = () => {
             />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creando evento..." : "Crear Evento"}
+              {isLoading ? "Procesando..." : selectedEvento ? "Actualizar Evento" : "Crear Evento"}
             </Button>
+
+            {selectedEvento && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSelectedEvento(null);
+                  form.reset();
+                }}
+              >
+                Cancelar Edición
+              </Button>
+            )}
           </form>
         </Form>
+      </TabsContent>
+      
+      <TabsContent value="lista">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Fecha Inicio</TableHead>
+                <TableHead>Fecha Fin</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {eventos.map((evento) => (
+                <TableRow key={evento.id}>
+                  <TableCell>{evento.nombre}</TableCell>
+                  <TableCell>{new Date(evento.fecha_inicio).toLocaleString()}</TableCell>
+                  <TableCell>{new Date(evento.fecha_fin).toLocaleString()}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(evento)}
+                    >
+                      Editar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </TabsContent>
       
       <TabsContent value="partidos">

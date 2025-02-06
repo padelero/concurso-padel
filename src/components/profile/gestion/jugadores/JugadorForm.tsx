@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   nombre: z.string().min(1, "El nombre es requerido"),
@@ -31,11 +32,25 @@ const formSchema = z.object({
     required_error: "Debes seleccionar una posición",
   }),
   patrocinador: z.string().optional(),
+  activo: z.boolean().default(true),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-export const JugadorForm = () => {
+type JugadorFormProps = {
+  jugador?: {
+    id: string;
+    nombre: string;
+    genero: string;
+    posicion: string;
+    patrocinador: string | null;
+    activo: boolean;
+  } | null;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+};
+
+export const JugadorForm = ({ jugador, onSuccess, onCancel }: JugadorFormProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,36 +61,71 @@ export const JugadorForm = () => {
       genero: undefined,
       posicion: undefined,
       patrocinador: "",
+      activo: true,
     },
   });
+
+  useEffect(() => {
+    if (jugador) {
+      form.reset({
+        nombre: jugador.nombre,
+        genero: jugador.genero as "masculino" | "femenino",
+        posicion: jugador.posicion as "derecha" | "reves",
+        patrocinador: jugador.patrocinador || "",
+        activo: jugador.activo,
+      });
+    }
+  }, [jugador, form]);
 
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
-      const { error } = await supabase.from("jugadores").insert({
-        nombre: data.nombre,
-        genero: data.genero,
-        posicion: data.posicion,
-        patrocinador: data.patrocinador || null,
-        created_by: user?.id,
-      });
+      if (jugador) {
+        const { error } = await supabase
+          .from("jugadores")
+          .update({
+            nombre: data.nombre,
+            genero: data.genero,
+            posicion: data.posicion,
+            patrocinador: data.patrocinador || null,
+            activo: data.activo,
+          })
+          .eq("id", jugador.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Jugador creado",
-        description: "El jugador se ha creado correctamente",
-      });
+        toast({
+          title: "Jugador actualizado",
+          description: "El jugador se ha actualizado correctamente",
+        });
+      } else {
+        const { error } = await supabase.from("jugadores").insert({
+          nombre: data.nombre,
+          genero: data.genero,
+          posicion: data.posicion,
+          patrocinador: data.patrocinador || null,
+          activo: data.activo,
+          created_by: user?.id,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Jugador creado",
+          description: "El jugador se ha creado correctamente",
+        });
+      }
 
       form.reset();
+      onSuccess?.();
     } catch (error) {
-      console.error("Error creating player:", error);
+      console.error("Error with player:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo crear el jugador. Por favor, inténtalo de nuevo.",
+        description: "No se pudo procesar el jugador. Por favor, inténtalo de nuevo.",
       });
     } finally {
       setIsLoading(false);
@@ -159,9 +209,48 @@ export const JugadorForm = () => {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Creando jugador..." : "Crear Jugador"}
-        </Button>
+        <FormField
+          control={form.control}
+          name="activo"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Estado del Jugador
+                </FormLabel>
+                <div className="text-sm text-muted-foreground">
+                  {field.value ? "Activo" : "Inactivo"}
+                </div>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-4">
+          <Button type="submit" className="flex-1" disabled={isLoading}>
+            {isLoading ? "Procesando..." : jugador ? "Actualizar Jugador" : "Crear Jugador"}
+          </Button>
+
+          {jugador && (
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                form.reset();
+                onCancel?.();
+              }}
+            >
+              Cancelar Edición
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   );

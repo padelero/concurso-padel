@@ -33,7 +33,6 @@ type FormData = {
 type Jugador = {
   id: string;
   nombre: string;
-  posicion: string;
 };
 
 type Evento = {
@@ -63,7 +62,7 @@ export const PartidosTab = () => {
     const fetchJugadores = async () => {
       const { data, error } = await supabase
         .from("jugadores")
-        .select("id, nombre, posicion")
+        .select("id, nombre")
         .eq("activo", true);
 
       if (error) {
@@ -121,10 +120,6 @@ export const PartidosTab = () => {
     }
   };
 
-  const jugadoresPorPosicion = (posicion: string) => {
-    return jugadores.filter(j => j.posicion === posicion);
-  };
-
   return (
     <div className="space-y-6">
       <Form {...form}>
@@ -170,7 +165,7 @@ export const PartidosTab = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {jugadoresPorPosicion("derecha").map((jugador) => (
+                        {jugadores.map((jugador) => (
                           <SelectItem key={jugador.id} value={jugador.id}>
                             {jugador.nombre}
                           </SelectItem>
@@ -194,7 +189,7 @@ export const PartidosTab = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {jugadoresPorPosicion("reves").map((jugador) => (
+                        {jugadores.map((jugador) => (
                           <SelectItem key={jugador.id} value={jugador.id}>
                             {jugador.nombre}
                           </SelectItem>
@@ -222,7 +217,7 @@ export const PartidosTab = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {jugadoresPorPosicion("derecha").map((jugador) => (
+                        {jugadores.map((jugador) => (
                           <SelectItem key={jugador.id} value={jugador.id}>
                             {jugador.nombre}
                           </SelectItem>
@@ -246,7 +241,7 @@ export const PartidosTab = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {jugadoresPorPosicion("reves").map((jugador) => (
+                        {jugadores.map((jugador) => (
                           <SelectItem key={jugador.id} value={jugador.id}>
                             {jugador.nombre}
                           </SelectItem>
