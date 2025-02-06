@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,22 +22,29 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 
-type FormData = {
-  nombre: string;
-  genero: string;
-  posicion: string;
-  patrocinador: string;
-};
+const formSchema = z.object({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  genero: z.enum(["masculino", "femenino"], {
+    required_error: "Debes seleccionar un género",
+  }),
+  posicion: z.enum(["derecha", "reves"], {
+    required_error: "Debes seleccionar una posición",
+  }),
+  patrocinador: z.string().optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 export const JugadoresTab = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       nombre: "",
-      genero: "",
-      posicion: "",
+      genero: undefined,
+      posicion: undefined,
       patrocinador: "",
     },
   });
