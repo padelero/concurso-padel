@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Evento, Partido } from "../types";
+import type { Evento, Partido } from "./types";
 
 type EventosListProps = {
   eventos: Evento[];
@@ -198,4 +198,3 @@ export const EventosList = ({ eventos, onEdit }: EventosListProps) => {
     </div>
   );
 };
-
