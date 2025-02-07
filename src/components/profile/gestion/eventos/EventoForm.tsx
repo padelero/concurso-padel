@@ -1,26 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { type Evento } from "../types";
-
-type FormData = {
-  nombre: string;
-  fecha_inicio: string;
-  fecha_fin: string;
-  descripcion: string;
-};
+import { type EventoFormData } from "./types";
+import { EventoFormField } from "./components/EventoFormField";
+import { EventoFormActions } from "./components/EventoFormActions";
 
 type EventoFormProps = {
   evento?: Evento | null;
@@ -32,7 +19,7 @@ export const EventoForm = ({ evento, onSuccess, onCancel }: EventoFormProps) => 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<FormData>({
+  const form = useForm<EventoFormData>({
     defaultValues: {
       nombre: "",
       fecha_inicio: "",
@@ -52,7 +39,7 @@ export const EventoForm = ({ evento, onSuccess, onCancel }: EventoFormProps) => 
     }
   }, [evento, form]);
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: EventoFormData) => {
     try {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -100,84 +87,42 @@ export const EventoForm = ({ evento, onSuccess, onCancel }: EventoFormProps) => 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
+        <EventoFormField
+          form={form}
           name="nombre"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nombre del Evento</FormLabel>
-              <FormControl>
-                <Input placeholder="Nombre del evento" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Nombre del Evento"
+          placeholder="Nombre del evento"
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
+          <EventoFormField
+            form={form}
             name="fecha_inicio"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fecha de Inicio</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Fecha de Inicio"
+            type="datetime-local"
           />
 
-          <FormField
-            control={form.control}
+          <EventoFormField
+            form={form}
             name="fecha_fin"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fecha de Fin</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Fecha de Fin"
+            type="datetime-local"
           />
         </div>
 
-        <FormField
-          control={form.control}
+        <EventoFormField
+          form={form}
           name="descripcion"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descripción</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Descripción del evento"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Descripción"
+          type="textarea"
+          placeholder="Descripción del evento"
         />
 
-        <div className="flex gap-4">
-          <Button type="submit" className="flex-1" disabled={isLoading}>
-            {isLoading ? "Procesando..." : evento ? "Actualizar Evento" : "Crear Evento"}
-          </Button>
-
-          {evento && (
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              onClick={onCancel}
-            >
-              Cancelar Edición
-            </Button>
-          )}
-        </div>
+        <EventoFormActions
+          isLoading={isLoading}
+          isEditing={!!evento}
+          onCancel={onCancel}
+        />
       </form>
     </Form>
   );
