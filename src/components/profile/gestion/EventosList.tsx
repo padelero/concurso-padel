@@ -162,7 +162,10 @@ export const EventosList = ({ eventos, onEdit }: EventosListProps) => {
                               <TableCell>
                                 <Select
                                   value={partido.resultado || "sin_resultado"}
-                                  onValueChange={(value) => updateResultado(partido.id, evento.id, value === "sin_resultado" ? null : value as "2/0" | "2/1" | "1/2" | "0/2")}
+                                  onValueChange={(value) => {
+                                    const resultado = value === "sin_resultado" ? null : value as "2/0" | "2/1" | "1/2" | "0/2";
+                                    updateResultado(partido.id, evento.id, resultado);
+                                  }}
                                 >
                                   <SelectTrigger className="w-24">
                                     <SelectValue placeholder="--" />
