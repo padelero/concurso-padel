@@ -11,16 +11,20 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import type { Partido } from "../../types";
 import { PartidoResultSelector } from "./PartidoResultSelector";
+import { useNavigate } from "react-router-dom";
 
 type PartidosListProps = {
   partidos: Partido[];
+  eventoId: string;
   onUpdateResultado: (
     partidoId: string,
     resultado: "2/0" | "2/1" | "1/2" | "0/2" | null
   ) => void;
 };
 
-export const PartidosList = ({ partidos, onUpdateResultado }: PartidosListProps) => {
+export const PartidosList = ({ partidos, eventoId, onUpdateResultado }: PartidosListProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -28,7 +32,7 @@ export const PartidosList = ({ partidos, onUpdateResultado }: PartidosListProps)
         <Button
           size="sm"
           onClick={() => {
-            // TODO: Implementar la creación de partidos
+            navigate("/profile", { state: { tab: "gestion", subtab: "partidos", eventoId } });
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
