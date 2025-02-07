@@ -54,7 +54,11 @@ export const EventosList = ({ eventos, onEdit }: EventosListProps) => {
     setOpenEventos(prev => ({ ...prev, [eventoId]: !prev[eventoId] }));
   };
 
-  const updateResultado = async (partidoId: string, eventoId: string, resultado: string) => {
+  const updateResultado = async (
+    partidoId: string, 
+    eventoId: string, 
+    resultado: "2/0" | "2/1" | "1/2" | "0/2" | null
+  ) => {
     const { error } = await supabase
       .from("partidos")
       .update({ resultado })
@@ -161,14 +165,17 @@ export const EventosList = ({ eventos, onEdit }: EventosListProps) => {
                               </TableCell>
                               <TableCell>
                                 <Select
-                                  value={partido.resultado || ""}
-                                  onValueChange={(value) => updateResultado(partido.id, evento.id, value)}
+                                  value={partido.resultado || "sin_resultado"}
+                                  onValueChange={(value) => {
+                                    const resultado = value === "sin_resultado" ? null : (value as "2/0" | "2/1" | "1/2" | "0/2");
+                                    updateResultado(partido.id, evento.id, resultado);
+                                  }}
                                 >
                                   <SelectTrigger className="w-24">
                                     <SelectValue placeholder="--" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">--</SelectItem>
+                                    <SelectItem value="sin_resultado">--</SelectItem>
                                     <SelectItem value="2/0">2-0</SelectItem>
                                     <SelectItem value="2/1">2-1</SelectItem>
                                     <SelectItem value="1/2">1-2</SelectItem>
