@@ -127,6 +127,7 @@ export const EventosList = ({ eventos, onEdit }: EventosListProps) => {
                   <TableCell colSpan={4} className="p-4">
                     <PartidosList
                       partidos={partidos[evento.id] || []}
+                      eventoId={evento.id}
                       onUpdateResultado={(partidoId, resultado) => 
                         updateResultado(partidoId, evento.id, resultado)
                       }
