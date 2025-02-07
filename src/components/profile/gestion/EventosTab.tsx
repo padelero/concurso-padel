@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PartidosTab } from "./PartidosTab";
 import { EventoForm } from "./eventos/EventoForm";
 import { EventosList } from "./eventos/EventosList";
 import type { Evento } from "./types";
@@ -33,7 +33,6 @@ export const EventosTab = () => {
       <TabsList>
         <TabsTrigger value="crear">Crear/Editar Evento</TabsTrigger>
         <TabsTrigger value="lista">Lista de Eventos</TabsTrigger>
-        <TabsTrigger value="partidos">Partidos</TabsTrigger>
       </TabsList>
       
       <TabsContent value="crear">
@@ -52,10 +51,6 @@ export const EventosTab = () => {
           eventos={eventos}
           onEdit={setSelectedEvento}
         />
-      </TabsContent>
-      
-      <TabsContent value="partidos">
-        <PartidosTab />
       </TabsContent>
     </Tabs>
   );
