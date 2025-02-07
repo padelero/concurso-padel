@@ -1,3 +1,4 @@
+
 export type Evento = {
   id: string;
   nombre: string;
