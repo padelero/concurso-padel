@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/Dashboard"; 
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ function App() {
               <Route path="/auth" element={<Navigate to="/" replace />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
