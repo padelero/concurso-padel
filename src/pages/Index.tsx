@@ -12,6 +12,7 @@ export default function LandingPage() {
   const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -97,6 +98,32 @@ export default function LandingPage() {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado",
+        description: "Revisa tu correo para restablecer tu contraseña.",
+      });
+      setIsResetMode(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Error al enviar el email de recuperación",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -117,66 +144,123 @@ export default function LandingPage() {
             <CardTitle>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre</Label>
+            <form onSubmit={isResetMode ? handlePasswordReset : handleSubmit} className="space-y-4">
+              {isResetMode ? (
+                <>
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id="name"
-                    name="name"
-                    type="text"
+                    id="email"
+                    type="email"
+                    placeholder="Ingresa tu email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
-                    placeholder="Tu nombre"
-                    value={formData.name}
-                    onChange={handleChange}
                   />
-                </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Cargando..." : "Enviar email de recuperación"}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setIsResetMode(false)}
+                    className="mt-4 text-sm text-blue-600 hover:text-blue-800 w-full text-center"
+                  >
+                    Volver al inicio de sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  {isLogin ? (
+                    <>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Ingresa tu email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                      />
+                      <Label htmlFor="password">Contraseña</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Ingresa tu contraseña"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required
+                      />
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Cargando..." : "Iniciar sesión"}
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => setIsResetMode(true)}
+                        className="mt-4 text-sm text-blue-600 hover:text-blue-800 w-full text-center"
+                      >
+                        ¿Olvidaste tu contraseña?
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nombre</Label>
+                        <Input
+                          id="name"
+                          name="name"
+                          type="text"
+                          required
+                          placeholder="Tu nombre"
+                          value={formData.name}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          required
+                          placeholder="tu@email.com"
+                          value={formData.email}
+                          onChange={handleChange}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Contraseña</Label>
+                        <Input
+                          id="password"
+                          name="password"
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={formData.password}
+                          onChange={handleChange}
+                        />
+                      </div>
+
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Procesando...' : 'Registrarse'}
+                      </Button>
+                    </>
+                  )}
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setIsLogin(!isLogin)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      disabled={isLoading}
+                    >
+                      {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
+                    </button>
+                  </div>
+                </>
               )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="tu@email.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Procesando...' : (isLogin ? 'Iniciar Sesión' : 'Registrarse')}
-              </Button>
             </form>
-
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-blue-600 hover:text-blue-800 text-sm"
-                disabled={isLoading}
-              >
-                {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
-              </button>
-            </div>
           </CardContent>
         </Card>
       </div>
